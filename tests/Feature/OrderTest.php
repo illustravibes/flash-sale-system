@@ -12,6 +12,7 @@ use App\Services\OrderService;
 
 uses(RefreshDatabase::class);
 
+// order services test
 test('order services test', function () {
     $product = Product::create([
         'name' => 'HP Gaming',
@@ -36,4 +37,42 @@ test('order services test', function () {
     ]);
 
     $this->assertEquals(8, $product->fresh()->stock);
+});
+
+
+//flash sale
+test('flash sale order test', function() {
+    
+    $product = Product::create([
+        'name' => 'Flash Sale Iphone 17',
+        'description' => 'Sale 7.7!',
+        'price' => 1000,
+        'stock' => 3,
+    ]);
+
+    $totalCheckoutRequest = 10;
+    $successCount = 0;
+    $failedCount = 0;
+
+    for ($i = 0; $i < $totalCheckoutRequest; $i++) {
+        try {
+            $response = $this->postJson('/api/orders', [
+                'items' => [
+                    [
+                    'product_id' => $product->id,
+                    'quantity' => 1,
+                    ]
+                ]
+                ]);
+
+                if ($response->status() === 201) {
+                    $successCount++;
+                }
+        } catch (\Exception $e) {
+            $failedCount++;
+        }
+    }
+
+    $this->assertEquals(3, $successCount);
+    $this->assertEquals(0, $product->fresh()->stock);
 });
